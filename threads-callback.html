@@ -25,9 +25,24 @@
     document.getElementById("msg").textContent = "No code received";
     document.getElementById("copy").hidden = true;
   }
+  // Some embedded browsers deny navigator.clipboard; the old execCommand path still works on a click.
+  function legacyCopy(text) {
+    const t = document.createElement("textarea");
+    t.value = text;
+    t.style.cssText = "position:fixed;left:-9999px;opacity:0";
+    document.body.appendChild(t);
+    t.select();
+    const ok = document.execCommand("copy");
+    t.remove();
+    return ok;
+  }
   document.getElementById("copy").onclick = async () => {
-    await navigator.clipboard.writeText(code);
-    document.getElementById("done").textContent = "복사됨 / Copied";
+    const done = document.getElementById("done");
+    let ok = legacyCopy(code);
+    if (!ok) {
+      try { await navigator.clipboard.writeText(code); ok = true; } catch (e) {}
+    }
+    done.textContent = ok ? "복사됨 / Copied" : "복사 실패 / Copy failed";
   };
 </script>
 </body>
